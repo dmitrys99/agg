@@ -1,16 +1,25 @@
 //----------------------------------------------------------------------------
-// Anti-Grain Geometry - Version 2.4
-// Copyright (C) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
-//
-// Permission to copy, use, modify, sell and distribute this software 
-// is granted provided this copyright notice appears in all copies. 
-// This software is provided "as is" without express or implied
-// warranty, and with no claim as to its suitability for any purpose.
-//
-//----------------------------------------------------------------------------
+// Anti-Grain Geometry (AGG) - Version 2.5
+// A high quality rendering engine for C++
+// Copyright (C) 2002-2006 Maxim Shemanarev
 // Contact: mcseem@antigrain.com
 //          mcseemagg@yahoo.com
-//          http://www.antigrain.com
+//          http://antigrain.com
+// 
+// AGG is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+// 
+// AGG is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with AGG; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+// MA 02110-1301, USA.
 //----------------------------------------------------------------------------
 
 #ifndef AGG_FONT_WIN32_TT_INCLUDED
@@ -53,8 +62,10 @@ namespace agg
         void width(double w)          { m_width = unsigned(w);   }
         void weight(int w)            { m_weight = w;            }
         void italic(bool it)          { m_italic = it;           }
+        void underline(bool ul)       { m_underline = ul;        }
+        void strikeout(bool so)       { m_strikeout = so;        }
         void char_set(DWORD c)        { m_char_set = c;          }
-        void pitch_and_family(DWORD p){ m_pitch_and_family = p; }
+        void pitch_and_family(DWORD p){ m_pitch_and_family = p;  }
         void flip_y(bool flip)        { m_flip_y = flip;         }
         void hinting(bool h)          { m_hinting = h;           }
         bool create_font(const char* typeface_, glyph_rendering ren_type);
@@ -65,6 +76,8 @@ namespace agg
                          double width_=0.0,
                          int weight_=FW_REGULAR,
                          bool italic_=false,
+                         bool underline_=false,
+                         bool strikeout_=false,
                          DWORD char_set_=ANSI_CHARSET,
                          DWORD pitch_and_family_=FF_DONTCARE);
 
@@ -89,12 +102,19 @@ namespace agg
         double      width()        const { return m_width;      }
         int         weight()       const { return m_weight;     }
         bool        italic()       const { return m_italic;     }
+        bool        underline()    const { return m_underline;  }
+        bool        strikeout()    const { return m_strikeout;  }
         DWORD       char_set()     const { return m_char_set;   }
         DWORD       pitch_and_family() const { return m_pitch_and_family; }
         bool        hinting()      const { return m_hinting;    }
         bool        flip_y()       const { return m_flip_y;     }
+		HDC			dc()		   const { return m_dc;			}
 
-
+		UINT		strikeout_size()		const { return m_strikeout_size;	  }
+		int			strikeout_position()	const { return m_strikeout_position;  }
+		int			underscore_size()		const { return m_underscore_size;	  }
+		int			underscore_position()	const { return m_underscore_position; }
+		bool		metrics_valid()			const { return m_metrics_valid;		  }
         // Interface mandatory to implement for font_cache_manager
         //--------------------------------------------------------------------
         const char*     font_signature() const { return m_signature;    }
@@ -110,6 +130,8 @@ namespace agg
         void            write_glyph_to(int8u* data) const;
         bool            add_kerning(unsigned first, unsigned second,
                                     double* x, double* y);
+
+		bool			get_metrics();
 
     private:
         font_engine_win32_tt_base(const font_engine_win32_tt_base&);
@@ -137,10 +159,18 @@ namespace agg
         unsigned        m_width;
         int             m_weight;
         bool            m_italic;
+        bool            m_strikeout;
+        bool            m_underline;
         DWORD           m_char_set;
         DWORD           m_pitch_and_family;
         bool            m_hinting;
         bool            m_flip_y;
+
+		UINT			m_strikeout_size;
+		int				m_strikeout_position;
+		int				m_underscore_size;
+		int				m_underscore_position;	
+		bool			m_metrics_valid;
 
         bool            m_font_created;
         unsigned        m_resolution;

@@ -1,16 +1,25 @@
 //----------------------------------------------------------------------------
-// Anti-Grain Geometry - Version 2.4
-// Copyright (C) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
-//
-// Permission to copy, use, modify, sell and distribute this software 
-// is granted provided this copyright notice appears in all copies. 
-// This software is provided "as is" without express or implied
-// warranty, and with no claim as to its suitability for any purpose.
-//
-//----------------------------------------------------------------------------
+// Anti-Grain Geometry (AGG) - Version 2.5
+// A high quality rendering engine for C++
+// Copyright (C) 2002-2006 Maxim Shemanarev
 // Contact: mcseem@antigrain.com
 //          mcseemagg@yahoo.com
-//          http://www.antigrain.com
+//          http://antigrain.com
+// 
+// AGG is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+// 
+// AGG is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with AGG; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+// MA 02110-1301, USA.
 //----------------------------------------------------------------------------
 
 #include <stdio.h>
@@ -377,11 +386,13 @@ namespace agg
         m_change_stamp(0),
         m_typeface(new char [256-16]),
         m_typeface_len(256-16-1),
-        m_signature(new char [256+256-16]),
+        m_signature(new char [256+256-16+2]),
         m_height(0),
         m_width(0),
         m_weight(FW_REGULAR),
         m_italic(false),
+        m_strikeout(false),
+        m_underline(false),
         m_char_set(DEFAULT_CHARSET),
         m_pitch_and_family(FF_DONTCARE),
         m_hinting(true),
@@ -408,7 +419,13 @@ namespace agg
         m_scanline_bin(),
         m_scanlines_aa(),
         m_scanlines_bin(),
-        m_rasterizer()
+        m_rasterizer(),
+		m_metrics_valid(false),
+		m_strikeout_size(0),
+		m_strikeout_position(0),
+		m_underscore_size(0),
+		m_underscore_position(0)
+
     {
         m_curves16.approximation_scale(4.0);
         m_curves32.approximation_scale(4.0);
@@ -464,6 +481,7 @@ namespace agg
             {
                 m_cur_font = m_fonts[idx];
                 ::SelectObject(m_dc, m_cur_font);
+				m_metrics_valid = get_metrics();
                 m_num_kerning_pairs = 0;
                 return true;
             }
@@ -475,8 +493,8 @@ namespace agg
                                           0,                      // base-line orientation angle
                                           m_weight,               // font weight
                                           m_italic,               // italic attribute option
-                                          0,                      // underline attribute option
-                                          0,                      // strikeout attribute option
+                                          m_underline,            // underline attribute option
+                                          m_strikeout,            // strikeout attribute option
                                           m_char_set,             // character set identifier
                                           OUT_DEFAULT_PRECIS,     // output precision
                                           CLIP_DEFAULT_PRECIS,    // clipping precision
@@ -505,7 +523,8 @@ namespace agg
                     m_fonts[m_num_fonts] = m_cur_font;
                     ++m_num_fonts;
                     ::SelectObject(m_dc, m_cur_font);
-                    m_num_kerning_pairs = 0;
+					m_metrics_valid = get_metrics();
+					m_num_kerning_pairs = 0;
                     return true;
                 }
             }
@@ -524,6 +543,8 @@ namespace agg
                                                 double width_,
                                                 int weight_,
                                                 bool italic_,
+                                                bool underline_,
+                                                bool strikeout_,
                                                 DWORD char_set_,
                                                 DWORD pitch_and_family_)
     {
@@ -531,6 +552,8 @@ namespace agg
         width(width_);
         weight(weight_);
         italic(italic_);
+		underline(underline_);
+        strikeout(strikeout_);
         char_set(char_set_);
         pitch_and_family(pitch_and_family_);
         return create_font(typeface_, ren_type);
@@ -560,7 +583,7 @@ namespace agg
             }
       
             sprintf(m_signature, 
-                    "%s,%u,%d,%d:%dx%d,%d,%d,%d,%d,%d,%08X", 
+                    "%s,%u,%d,%d:%dx%d,%d,%d,%d,%d,%d,%d,%d,%08X", 
                     m_typeface,
                     m_char_set,
                     int(m_glyph_rendering),
@@ -569,6 +592,8 @@ namespace agg
                     m_width,
                     m_weight,
                     int(m_italic),
+                    int(m_strikeout),
+                    int(m_underline),
                     int(m_hinting),
                     int(m_flip_y),
                     int(m_pitch_and_family),
@@ -931,7 +956,22 @@ namespace agg
         return false;
     }
 
+	bool font_engine_win32_tt_base::get_metrics() {
+		UINT nSize=GetOutlineTextMetrics(m_dc, 0, NULL);
+		if(!nSize) return false;
 
+		OUTLINETEXTMETRIC* pTextMetrics = (OUTLINETEXTMETRIC*)new BYTE[nSize];
+		if(!GetOutlineTextMetrics(m_dc, nSize, pTextMetrics)) return false;
+
+		m_strikeout_size		 = pTextMetrics->otmsStrikeoutSize;
+		m_strikeout_position  = pTextMetrics->otmsStrikeoutPosition;
+		m_underscore_size	 = pTextMetrics->otmsUnderscoreSize;
+		m_underscore_position = pTextMetrics->otmsUnderscorePosition;
+
+		delete pTextMetrics;
+
+		return true;
+	}
 
 }
 
