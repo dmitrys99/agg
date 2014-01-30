@@ -68,9 +68,9 @@ namespace agg
         void pitch_and_family(DWORD p){ m_pitch_and_family = p;  }
         void flip_y(bool flip)        { m_flip_y = flip;         }
         void hinting(bool h)          { m_hinting = h;           }
-        bool create_font(const char* typeface_, glyph_rendering ren_type);
+        bool create_font(const wchar_t* typeface_, glyph_rendering ren_type);
 
-        bool create_font(const char* typeface_, 
+        bool create_font(const wchar_t* typeface_, 
                          glyph_rendering ren_type,
                          double height_,
                          double width_=0.0,
@@ -97,7 +97,7 @@ namespace agg
         // Accessors
         //--------------------------------------------------------------------
         unsigned    resolution()   const { return m_resolution; }
-        const char* typeface()     const { return m_typeface;   }
+        const wchar_t* typeface()     const { return m_typeface;   }
         double      height()       const { return m_height;     }
         double      width()        const { return m_width;      }
         int         weight()       const { return m_weight;     }
@@ -152,7 +152,7 @@ namespace agg
         HFONT           m_cur_font;
 
         int             m_change_stamp;
-        char*           m_typeface;
+        wchar_t*           m_typeface;
         unsigned        m_typeface_len;
         char*           m_signature;
         unsigned        m_height;

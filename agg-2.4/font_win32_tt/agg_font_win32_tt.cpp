@@ -384,7 +384,7 @@ namespace agg
         m_cur_font(0),
 
         m_change_stamp(0),
-        m_typeface(new char [256-16]),
+        m_typeface(new wchar_t [256-16]),
         m_typeface_len(256-16-1),
         m_signature(new char [256+256-16+2]),
         m_height(0),
@@ -448,22 +448,22 @@ namespace agg
     }
 
     //------------------------------------------------------------------------
-    bool font_engine_win32_tt_base::create_font(const char* typeface_, 
+    bool font_engine_win32_tt_base::create_font(const wchar_t* typeface_, 
                                                 glyph_rendering ren_type)
     {
         if(m_dc)
         {
-            unsigned len = strlen(typeface_);
+            unsigned len = wcslen(typeface_);
             if(len > m_typeface_len)
             {
                 delete [] m_signature;
                 delete [] m_typeface;
-                m_typeface  = new char [len + 32];
+                m_typeface  = new wchar_t [len + 32];
                 m_signature = new char [len + 32 + 256];
                 m_typeface_len = len + 32 - 1;
             }
 
-            strcpy(m_typeface, typeface_);
+            wcscpy(m_typeface, typeface_);
 
             int h = m_height;
             int w = m_width;
@@ -487,7 +487,7 @@ namespace agg
             }
             else
             {
-                m_cur_font = ::CreateFont(-h,                     // height of font
+                m_cur_font = ::CreateFontW(-h,                     // height of font
                                           w,                      // average character width
                                           0,                      // angle of escapement
                                           0,                      // base-line orientation angle
@@ -537,7 +537,7 @@ namespace agg
 
 
     //------------------------------------------------------------------------
-    bool font_engine_win32_tt_base::create_font(const char* typeface_, 
+    bool font_engine_win32_tt_base::create_font(const wchar_t* typeface_, 
                                                 glyph_rendering ren_type,
                                                 double height_,
                                                 double width_,
